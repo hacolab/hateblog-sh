@@ -1,0 +1,22 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Select draft file by user
+DRAFT_FILE=$(_m_select_draft)
+
+# Cancel?
+[ -z "$DRAFT_FILE" ] && exit 0
+
+# Edit draft file
+$HATEBLOG_EDITOR "$DRAFT_FILE"
+DRAFT_FILE=$(_m_rename_draft_file "$DRAFT_FILE")
+
+# Preview
+#_m_preview_new_entry "$DRAFT_FILE"
+
+# Post entry file?
+_m_post_entry "$DRAFT_FILE"
+
+exit $?
+

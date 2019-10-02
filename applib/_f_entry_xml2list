@@ -1,0 +1,15 @@
+#!/bin/sh -eu
+#+[USAGE]
+#+  $0 [ListItems]
+
+ITEMS="$@"
+if [ -z "$ITEMS" ]; then
+  ITEMS="draft published category title author edit edited"
+fi
+
+# main code
+_f_entry_pick_tags detail   \
+| _f_entry_format_tags      \
+| _f_entry_perline_tags     \
+| _f_entry_format_list $ITEMS
+

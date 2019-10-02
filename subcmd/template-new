@@ -1,0 +1,20 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Input template name by user
+SELECTED_TEMPLATE=$(_m_input_template)
+
+# Cancel?
+[ -z "$SELECTED_TEMPLATE" ] && exit 0
+
+# Make default template file
+if [ ! -f "$SELECTED_TEMPLATE" ]; then
+  _m_new_template_file "$SELECTED_TEMPLATE"
+fi
+
+# Edit template file
+$HATEBLOG_EDITOR "$SELECTED_TEMPLATE"
+
+exit 0
+

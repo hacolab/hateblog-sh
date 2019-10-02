@@ -1,0 +1,224 @@
+#!/bin/sh -u
+################################################################################
+#-Hatena-Blog's entries fetch & edit & post script.
+#-
+# [VERSION]                0.1.0
+#
+#+[USAGE]
+#+  $0 [-hV]
+#+  $0 config [common|new|edit|delete]
+#+  $0 [-b BlogID] entry [fetch|edit|delete]
+#+  $0 [-b BlogID] entry new [<TempaleteName>]
+#+  $0 [-b BlogID] draft [edit|delete]
+#+  $0 [-b BlogID] template [new|edit|delete]
+#+  $0 [-b BlogID] list (local|remote) [<Item> ...]
+#+  $0 [-b BlogID] request get <Path> [-l <Count>[:<Pattern>]]
+#+  $0 [-b BlogID] request delete <EntryID>
+#+  $0 [-b BlogID] request post <TxFile>
+#+  $0 [-b BlogID] request put <TxFile> [<EntryID>]
+#+
+#+[OPTIONS]
+#+  -h                      print script help
+#+  -V                      print script version
+#+  -b BlogID               target blog's id
+#+
+#-[SUB-COMMANDS]
+#-  config common|cc        edit common config
+#-  config edit|ce          edit blog config
+#-  config new|cn           make new blog config
+#-  config delete|cd        delete blog config
+#-
+#-  entry fetch|ef|f [-f]   download posted blog entries
+#-  entry edit|ee|e         edit posted blog entry
+#-  entry new|en|n          edit & post new blog entry
+#-  entry delete|ed|d       delete posted blog entry
+#-
+#-  draft edit|de           edit not posted yet blog entry
+#-  draft delete|dd         delete not posted yet blog entry
+#-
+#-  template edit|te        edit template
+#-  template new|tn         make new template
+#-  template delete|td      delete template
+#-
+#-  list local|ll           listup posted blog entries from local list
+#-  list server|ls          listup posted blog entries from server
+#-
+#-  request get             send GET request by Hatena-Blog's AtomPub API
+#-  request delete          send DELETE request by Hatena-Blog's AtomPub API
+#-  request post            send POST request by Hatena-Blog's AtomPub API
+#-  request put             send PUT request by Hatena-Blog's AtomPub API
+#-
+#-[STDIN]
+#-                          -
+#-[STDOUT]
+#-                          -
+#-[STDERR]
+#-                          -
+#-[EXIT-STATUS]             WARNING! Not implements exit status!!
+#-  0                       no error
+#-  1                       parameter error
+#-  2                       config error
+#-  3                       execute error
+#-  9                       user intrrupt
+#-
+#-[DEPENDENCY]
+#-  - curl
+#-  - fzf
+#-
+#-[REFERENCE]
+#-  http://developer.hatena.ne.jp/ja/documents/blog/apis/atom
+#-
+################################################################################
+CMD_NAME=$(basename $0)
+
+# Init shell config
+umask 0022
+IFS=$(printf ' \t\n_'); IFS=${IFS%_}
+export IFS
+
+# Append library directory
+CURRENT_DIR=$(pwd)
+if [ -L "$0" ]; then
+  SCRIPT_PATH=$(file "$0" \
+    | sed 's/^.*: symbolic link to //' \
+    | sed 's/^`\(.*\)'"'"'$/\1/')
+  SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+else
+  cd $(dirname $0)
+  SCRIPT_DIR=$(pwd)
+fi
+cd "$CURRENT_DIR"
+
+APPLIB_DIR="${SCRIPT_DIR}/applib"
+SHLIB_DIR="${SCRIPT_DIR}/shlib"
+SUBCMD_DIR="${SCRIPT_DIR}/subcmd"
+export PATH="${APPLIB_DIR}:${SHLIB_DIR}:${PATH}"
+
+# Load library files
+. "${SHLIB_DIR}/_def_func.sh"
+
+###################################################
+# Analyze options & parameters
+###################################################
+# Options
+BLOG_ID=
+while getopts hVb: OPT
+do
+  case $OPT in
+    b    ) BLOG_ID="$OPTARG" ;;
+    V    ) version_exit "$0" ;;
+    h    ) help_exit "$0" ;;
+    \?   ) usage_exit "$0" ;;
+  esac
+done
+shift $(expr $OPTIND - 1)
+
+# Command
+SUB_CMD=${1:-""}
+SUB_CMD=$(basename "$SUB_CMD")
+shift
+
+# SubAction
+SUB_ACTION=${1:-""}
+SUB_ACTION=$(basename "$SUB_ACTION")
+case "$SUB_CMD" in
+  # Config
+  config ) shift;;
+  cc ) SUB_CMD=config; SUB_ACTION=common; ;;
+  cn ) SUB_CMD=config; SUB_ACTION=new;    ;;
+  ce ) SUB_CMD=config; SUB_ACTION=edit;   ;;
+  cd ) SUB_CMD=config; SUB_ACTION=delete; ;;
+
+  # Entry
+  entry ) shift;;
+  ef|f ) SUB_CMD=entry; SUB_ACTION=fetch;  ;;
+  en|n ) SUB_CMD=entry; SUB_ACTION=new;    ;;
+  ee|e ) SUB_CMD=entry; SUB_ACTION=edit;   ;;
+  ed|d ) SUB_CMD=entry; SUB_ACTION=delete; ;;
+
+  # Draft
+  draft ) shift;;
+  de ) SUB_CMD=draft; SUB_ACTION=edit;   ;;
+  dd ) SUB_CMD=draft; SUB_ACTION=delete; ;;
+
+  # Template
+  template ) shift;;
+  tn ) SUB_CMD=template; SUB_ACTION=new;    ;;
+  te ) SUB_CMD=template; SUB_ACTION=edit;   ;;
+  td ) SUB_CMD=template; SUB_ACTION=delete; ;;
+
+  # List
+  list ) shift;;
+  ll ) SUB_CMD=list; SUB_ACTION=local;  ;;
+  ls ) SUB_CMD=list; SUB_ACTION=server; ;;
+
+  # Request
+  request ) shift;;
+  rq ) SUB_CMD=request; shift;;
+
+  # Ingore
+  "" ) usage_exit "$0" ;;
+esac
+
+###################################################
+# Export global variables
+###################################################
+. "${APPLIB_DIR}/_d_variable.sh"
+if [ $? -ne 0 ]; then
+  error_exit "Please execute '${CMD_NAME} config edit', and set to default blog" 2
+elif [ "$SUB_CMD" != "config" ]; then
+  # if not config command, need blog config file
+  if [ ! -f "$HATEBLOG_CONFIG_FILE" ]; then
+    error_exit "Please execute '${CMD_NAME} config new'" 2
+  fi
+fi
+
+###################################################
+# Select sub command
+###################################################
+CMD_SCRIPT="${SUBCMD_DIR}/${SUB_CMD}${SUB_ACTION:+-$SUB_ACTION}"
+if [ -x "$CMD_SCRIPT" ]; then
+  ${CMD_SCRIPT} "$@"
+  exit $?
+fi
+
+case $SUB_CMD in
+  #----------------------------------------
+  # for Test
+  #----------------------------------------
+  tcl )
+    echo "Target Blog> ${BLOG_ID}" 1>&2
+    rm -ri "${HATEBLOG_LIST_FILE}"
+    ;;
+  tce )
+    echo "Target Blog> ${BLOG_ID}" 1>&2
+    _prompt_yesno "delete all entry(local)?"
+    [ $? -eq 0 ] && rm -rf ${HATEBLOG_ENTRY_DIR}/*
+    ;;
+  tcd )
+    echo "Target Blog> ${BLOG_ID}" 1>&2
+    _prompt_yesno "delete all draft files?"
+    [ $? -eq 0 ] && rm -rf ${HATEBLOG_DRAFT_DIR}/*
+    ;;
+  tct )
+    echo "Target Blog> ${BLOG_ID}" 1>&2
+    _prompt_yesno "delete all trash files?"
+    [ $? -eq 0 ] && rm -rf ${HATEBLOG_TRASH_DIR}/*
+    ;;
+  tle )
+    find "${HATEBLOG_ENTRY_DIR}" -type f
+    ;;
+  tlt )
+    find "${HATEBLOG_TEMPLATE_DIR}" -type f
+    ;;
+  tld )
+    find "${HATEBLOG_DRAFT_DIR}" -type f
+    ;;
+  #----------------------------------------
+  # Invalid command
+  #----------------------------------------
+  * )
+    usage_exit "$0"
+    ;;
+esac
+

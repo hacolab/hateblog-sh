@@ -1,0 +1,48 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0 [ListItems,...]
+PLANE_TEXT_SEP=">"
+
+strip_tags() {
+  # <tag1>value1</tag1><tag2>value2</tag2><tag3>value3</tag3>
+  # value1>value2>value3
+  sed -e "s/<entry>//" -e "s/<\/entry>//" \
+    | sed "s#<[^>]*>\([^<]*\)</[^>]*>#\1${PLANE_TEXT_SEP}#g" \
+    | sed "s/>$//"
+}
+
+if [ $# -eq 0 ]; then
+  # Pickup all tags
+    strip_tags
+else
+  # Pickup target tags by arguments
+  pick_tags=
+  for tag in "$@"; do
+    # ,<tag1>,<tag2>....
+    pick_tags="$pick_tags,<$tag>"
+  done
+
+  # <tag1>,<tag2>
+  pick_tags=${pick_tags#,}
+  awk -v target="$pick_tags" -v target_num=$# \
+  'BEGIN { \
+    split(target, tags, ",");
+    for (i=1; i<=target_num; i++) {
+      len[i]=length(tags[i])
+      tags[i]=tags[i] "[^<]*";
+    }
+  }{
+    fields=""
+    for (i=1; i<=target_num; i++) {
+      where=match($0, tags[i]);
+      if (where == 0) {
+        fields=fields "'$PLANE_TEXT_SEP'"
+      }else {
+        fields=fields "'$PLANE_TEXT_SEP'" substr($0, RSTART+len[i], RLENGTH-len[i]);
+      }
+    }
+    sub(/^'"$PLANE_TEXT_SEP"'/, "", fields)
+    print fields
+  }'
+fi
+

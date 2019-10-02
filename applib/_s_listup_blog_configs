@@ -1,0 +1,10 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+cd "$HATEBLOG_CONFIG_DIR"
+
+find . -type f -name 'config' \
+| grep -v '^./config$'        \
+| sed 's%^.*/\([^/]*\)/config$%\1/config%'
+

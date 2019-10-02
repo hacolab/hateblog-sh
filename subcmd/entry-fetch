@@ -1,0 +1,79 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 [-f]
+CMD_NAME=$(basename $0)
+LIST_FILE_TMP="${HATEBLOG_TMP_DIR}/${CMD_NAME}.list.$(_now).$$"
+LIST_OLD_NEW_DIFF="${HATEBLOG_TMP_DIR}/${CMD_NAME}.diff.$(_now).$$"
+LIST_FILE="$HATEBLOG_LIST_FILE"
+
+# Functions
+cleanup_exit(){
+  rm "$LIST_OLD_NEW_DIFF" "$LIST_FILE_TMP" 1>/dev/null 2>&1
+  exit $1
+}
+trap 'cleanup_exit 9' HUP INT QUIT TERM
+
+# Parameters
+FULL_DOWNLOAD=
+while getopts f OPT
+do
+  case $OPT in
+    f    ) FULL_DOWNLOAD=true ;;
+    \?   ) exit 1 ;;
+  esac
+done
+shift $(expr $OPTIND - 1)
+
+# Get new entry list
+_s_fetch_entry | _f_entry_xml2list > "$LIST_FILE_TMP"
+
+# At first time?
+if [ ! -f "$LIST_FILE" ]; then
+  cp "$LIST_FILE_TMP" "$LIST_FILE"
+fi
+
+# Get entries
+if [ -n "$FULL_DOWNLOAD" ]; then
+  # Delete old local entry file
+  cat "$LIST_FILE" \
+  | while read line; do
+    ENTRY_FILE=$(_s_entry_file_path "$line")
+    _m_delete_entry_file "$ENTRY_FILE"
+  done
+
+  # Update list
+  mv "$LIST_FILE_TMP" "$LIST_FILE"
+
+  # Download new entry file
+  cat "$LIST_FILE" \
+  | while read line; do
+    _m_download_entry_file "$line"
+  #  echo "$line" >> "$LIST_FILE"
+  done
+else
+  # Diff List
+  diff "$LIST_FILE" "$LIST_FILE_TMP" > "$LIST_OLD_NEW_DIFF"
+
+  # Update list
+  mv "$LIST_FILE_TMP" "$LIST_FILE"
+
+  # Delete old entry files
+  cat "$LIST_OLD_NEW_DIFF"     \
+  | sed -n "s/^< //p" \
+  |while read line; do
+    ENTRY_FILE=$(_s_entry_file_path "$line")
+    _m_delete_entry_file "$ENTRY_FILE"
+  done
+
+  # Save new entry files
+  cat "$LIST_OLD_NEW_DIFF"     \
+  | sed -n "s/^> //p" \
+  | while read line; do
+    _m_download_entry_file "$line"
+  done
+  #| xargs -P 2 -L 1 -t -E "" _m_download_entry_file
+fi
+
+# Cleanup
+cleanup_exit 0
+

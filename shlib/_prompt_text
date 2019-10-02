@@ -1,0 +1,33 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {PromptMsg} [InvalidPattern] [DefaultText]
+
+# Parameters
+PROMPT_MSG=$1
+ACCEPT_PATTERN=${2:-"^"}
+DEFAULT_TEXT=${3:-""}
+
+# Input loop
+USER_INPUT=""
+while [ -z "$USER_INPUT" ]; do
+  # Input text by user
+  printf "%s" "$PROMPT_MSG > " 1>&2
+  read USER_INPUT
+
+  # Set default value
+  if [ -z "$USER_INPUT" ]; then
+    USER_INPUT="$DEFAULT_TEXT"
+    break
+  fi
+
+  # check invalid pattern
+  echo "$USER_INPUT" | grep -E "$ACCEPT_PATTERN" >/dev/null
+  if [ $? -ne 0 ]; then
+    echo "It is invalid pattern! Accept pattern is '$ACCEPT_PATTERN'" 1>&2
+    USER_INPUT=
+  fi
+done
+
+# Output result
+echo "$USER_INPUT"
+

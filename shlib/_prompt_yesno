@@ -1,0 +1,22 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {PromptMsg1}
+#+[EXIT_STAUTS]
+#+  y|Y* -> 0
+#+  n|N* -> 1
+
+# main code
+DEFAULT_CHILCE=""
+USER_CHOICE=""
+while [ -z "$USER_CHOICE" ]; do
+  printf "%s" "$1(y/n)> " 1>&2
+  read USER_CHOICE
+  case $USER_CHOICE in
+    [yY]* ) EXIT_STATUS=0  ;;
+    [nN]* ) EXIT_STATUS=1  ;;
+    *     ) USER_CHOICE="" ;;
+  esac
+done
+
+exit $EXIT_STATUS
+

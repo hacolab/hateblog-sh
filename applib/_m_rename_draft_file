@@ -1,0 +1,15 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+#+[OUTPUT]
+#+  new-file-path
+
+ENTRY_FILE="$1"
+BASE_DIR=$(dirname "$1")
+
+NEW_FILE="${BASE_DIR}/$(_now)_$(sed -n '5p' "$ENTRY_FILE" | _f_title_to_path).md"
+
+mv "$ENTRY_FILE" "${NEW_FILE}"
+
+echo "$NEW_FILE"
+

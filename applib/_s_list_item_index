@@ -1,0 +1,17 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ListItem}
+
+case "$1" in
+  draft     ) echo 1 ;;
+  published ) echo 2 ;;
+  category  ) echo 3 ;;
+  title     ) echo 4 ;;
+  author    ) echo 5 ;;
+  edit      ) echo 6 ;;
+  edited    ) echo 7 ;;
+  *         ) echo 0 ;;
+esac
+
+exit 0
+

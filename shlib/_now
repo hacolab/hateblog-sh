@@ -1,0 +1,6 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# main code
+date +"%Y%m%d%H%M%S"

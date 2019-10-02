@@ -1,0 +1,22 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryID} {EntryFile}
+
+OLD_ENTRY="${HATEBLOG_TMP_DIR}/entry-before-modify.$$"
+
+ENTRY_ID=$1
+NEW_ENTRY=$2
+
+# Preview
+_s_fetch_entry "$ENTRY_ID" | _f_entry_xml2md > "$OLD_ENTRY"
+diff "$OLD_ENTRY" "$NEW_ENTRY" 1>/dev/null 2>&1
+if [ $? -eq 0 ]; then
+  # file has not change message
+  _print_error "This entry has not changed!"
+else
+  # view diff
+  $HATEBLOG_DIFF_VIEWER "$OLD_ENTRY" "$NEW_ENTRY"
+fi
+
+rm -rf "$OLD_ENTRY" 1>/dev/null 2>&1
+

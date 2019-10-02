@@ -1,0 +1,29 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0
+
+# Line fiead symbol
+LF_CHAR=">"
+
+#[INPUT]
+# <entry>
+# <tag>value1</tag>
+# <category>cate1</category>
+# </entry>
+# <entry>
+# <tag>value2</tag>
+# <category>cate2</category>
+# <category>cate3</category>
+# </entry>
+#
+#[OUTPUT]
+# <entry><tag>value1</tag><category>cate1</category></entry>
+# <entry><tag>value2</tag><category>cate2,cate3</category></entry>
+tr '>' '<'                              \
+    | sed "s#</entry<#$LF_CHAR#g"       \
+    | tr -d '\n'                        \
+    | tr "$LF_CHAR" '\n'                \
+    | sed 's#<\([^<]*\)<#<\1>#g'        \
+    | sed 's#</category><category>#,#g' \
+    | sed 's#$#</entry>#'
+

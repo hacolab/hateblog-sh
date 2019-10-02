@@ -1,0 +1,10 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Move work directory
+cd "$HATEBLOG_TEMPLATE_DIR"
+
+find ${HATEBLOG_TEMPLATE_DIR} -type f \
+| sed 's%^.*/\([^/]*\)$%\1%'
+

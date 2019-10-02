@@ -1,0 +1,48 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {URL} <option>
+CMD_NAME=$(basename "$0")
+TMP_BODY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.body.$(_now).$$"
+TMP_HEADER="${HATEBLOG_TMP_DIR}/${CMD_NAME}.header.$(_now).$$"
+
+HTTP_RES_OK_CODE=200
+
+# Parameters
+MD_EXCHANGE=
+case "$1" in
+  entry/[0-9]* )
+    URL="$1"
+    MD_EXCHANGE=true
+    ;;
+  [0-9]* )
+    URL="entry/$1"
+    MD_EXCHANGE=true
+    ;;
+  * )
+    URL="$1"
+    ;;
+esac
+
+
+# Request
+hblg-req GET "$URL" "$HATEBLOG_CONFIG_FILE" -v "$@" 2>"$TMP_HEADER" 1>"$TMP_BODY"
+cat "$TMP_HEADER" | grep "^< HTTP/.* ${HTTP_RES_OK_CODE}" 1>/dev/null
+if [ $? -eq 0 ]; then
+  # Requset success
+  if [ -z "$MD_EXCHANGE" ]; then
+    cat "$TMP_BODY"
+  else
+    cat "$TMP_BODY" | _f_entry_xml2md
+  fi
+  EXIT_STATUS=0
+else
+  # Request faild
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+  EXIT_STATUS=1
+fi
+
+# Cleanup
+rm "$TMP_HEADER" "$TMP_BODY" 1>/dev/null 2>&1
+
+exit $EXIT_STATUS
+

@@ -1,0 +1,93 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ListItem,...}
+
+DELIM=">"
+
+if [ $# -eq 0 ]; then
+  # all items
+  grep "^"
+elif [ $# -eq 1 ]; then
+  # single item
+  case "$1" in
+    draft     |\
+    published |\
+    category  |\
+    title     |\
+    author    |\
+    edit      |\
+    edited    )
+      index=$(_s_list_item_index "$1")
+      cut -f $index -d"$DELIM"
+      ;;
+    entry_id  )
+      index=$(_s_list_item_index "edit")
+      cut -f $index -d"$DELIM" | sed "s%^.*/\([0-9]*\)$%\1%" ;;
+    * )
+      _print_error "'$1' is invalid item name!"
+      exit 1
+      ;;
+  esac
+else
+  # multi items
+  pick_index=""
+  entry_id_index=0
+  i=1
+  for item in "$@"; do
+    if [ "$item" = "entry_id" ]; then
+      index=$(_s_list_item_index "edit")
+      entry_id_index=$i
+    else
+      index=$(_s_list_item_index "$item")
+      if [ $index -eq 0 ]; then
+        _print_error "'$item' is invalid item name!"
+        exit 1
+      fi
+    fi
+    pick_index="${pick_index},${index}"
+    i=$(expr $i + 1)
+  done
+  pick_index=${pick_index#,}
+  awk -F "$DELIM" -v target="$pick_index" -v target_num=$# -v entry_id_index=$entry_id_index\
+  'BEGIN {\
+    split(target, idxs, ",");
+    entry_id_offset=0
+  }{
+    fields=""
+    if (entry_id_index > 0) {
+      # include entry_id
+      if (entry_id_offset == 0) {
+        # at first time
+        for (i=1; i<=target_num; i++) {
+          if (entry_id_index == i) {
+            # calc EntryID offset
+            entry_base_url=$(idxs[i])
+            sub(/[0-9]+$/, "", entry_base_url)
+            entry_id_offset=length(entry_base_url) + 1
+
+            fields=fields ">" substr($(idxs[i]), entry_id_offset, 50)
+          } else {
+            fields=fields ">" $(idxs[i])
+          }
+        }
+      } else {
+        for (i=1; i<=target_num; i++) {
+          if (entry_id_index == i) {
+            fields=fields ">" substr($(idxs[i]), entry_id_offset, 50)
+          } else {
+            fields=fields ">" $(idxs[i])
+          }
+        }
+      }
+    } else {
+      # not include entry_id
+      for (i=1; i<=target_num; i++) {
+        fields=fields ">" $(idxs[i])
+      }
+    }
+    sub(/^'"$DELIM"'/, "", fields)
+    print fields
+  }'
+fi
+
+exit 0

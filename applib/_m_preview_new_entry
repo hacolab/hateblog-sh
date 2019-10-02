@@ -1,0 +1,15 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+
+ENTRY_FILE=$1
+
+# Preview
+cat <<- PREVIEW_END 1>&2
++ Preview post xml -------------------------------
+
+$(_s_entry_md2xml "$ENTRY_FILE")
+
+-------------------------------------------------+
+PREVIEW_END
+

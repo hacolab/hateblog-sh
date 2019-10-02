@@ -1,0 +1,15 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Select template file by user
+SELECTED_TEMPLATE=$(_m_select_template)
+
+# Cancel?
+[ -z "$SELECTED_TEMPLATE" ] && exit 0
+
+# Edit template file
+$HATEBLOG_EDITOR "$SELECTED_TEMPLATE"
+
+exit 0
+

@@ -1,0 +1,28 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryID}
+CMD_NAME=$(basename $0)
+
+# Parameters
+ENTRY_ID="${1:+/$1}"
+CONFIG_FILE="${HATEBLOG_CONFIG_FILE}"
+
+TMP_HEADER="${HATEBLOG_TMP_DIR}/${CMD_NAME}.header.$(_now).$$"
+TMP_BODY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.body.$(_now).$$"
+
+# Get entry
+hblg-req GET "entry${ENTRY_ID}" "$CONFIG_FILE" -v 2> "$TMP_HEADER"
+cat "$TMP_HEADER" | grep '^< HTTP/.* 200' 1>/dev/null
+if [ $? -eq 0 ]; then
+  EXIT_STATUS=0
+else
+  # Request faild
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+  EXIT_STATUS=1
+fi
+
+# cleanup
+rm "$TMP_HEADER" 1>/dev/null 2>&1
+
+exit $EXIT_STATUS
+

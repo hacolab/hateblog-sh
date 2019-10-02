@@ -1,0 +1,33 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+CMD_NAME=$(basename "$0")
+TMP_BODY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.body.$(_now).$$"
+TMP_HEADER="${HATEBLOG_TMP_DIR}/${CMD_NAME}.header.$(_now).$$"
+
+HTTP_RES_OK_CODE=200
+
+# Parameters
+ENTRY_ID="$1"
+shift
+
+URL="entry/${ENTRY_ID}"
+
+# Request
+hblg-req DELETE "$URL" "$HATEBLOG_CONFIG_FILE" -v "$@" 2>"$TMP_HEADER" 1>"$TMP_BODY"
+cat "$TMP_HEADER" | grep "^< HTTP/.* ${HTTP_RES_OK_CODE}" 1>/dev/null
+if [ $? -eq 0 ]; then
+  # Requset success
+  cat "$TMP_BODY"
+  EXIT_STATUS=0
+else
+  # Request faild
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+  EXIT_STATUS=1
+fi
+
+# Cleanup
+rm "$TMP_HEADER" "$TMP_BODY" 1>/dev/null 2>&1
+
+exit $EXIT_STATUS
+

@@ -1,0 +1,41 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0 {EntryFile}
+
+# Analyze Option & Parameters
+ENTRY_FILE="$1"
+CONFIG_FILE="${HATEBLOG_CONFIG_FILE}"
+
+# Get entry info
+author=$(_get_value 'HATENA_ID' < "$CONFIG_FILE")
+updated=$(sed -n '2p' < "$ENTRY_FILE")
+draft=$(sed -n '3p' < "$ENTRY_FILE")
+category=$(sed -n '4p' < "$ENTRY_FILE" | _xml_escape_char)
+title=$(sed -n '5p' < "$ENTRY_FILE" | _xml_escape_char | sed 's/^# \{0,1\}//')
+
+# Header
+cat <<- ENDHEADER
+<?xml version="1.0" encoding="utf-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
+<title>${title}</title>
+<author><name>${author}</name></author>
+<updated>${updated}</updated>
+ENDHEADER
+
+# Contents
+printf '%s' '<content type="text/markdown">'
+sed -n '6,$p' < "$ENTRY_FILE"   \
+| _xml_escape_char              \
+| sed '$s/^\(.*\)$/\1<\/content>/'
+
+# Categories
+echo "$category" | tr ',' '\n' | sed 's/^\(.*\)$/<category term="\1" \/>/'
+
+# Footers
+cat <<- ENDFOOTER
+<app:control>
+<app:draft>${draft}</app:draft>
+</app:control>
+</entry>
+ENDFOOTER
+

@@ -1,0 +1,11 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+
+BLOG_ID="$1"
+
+_prompt_yesno "'$BLOG_ID' set to default blog?"
+if [ $? -eq 0 ]; then
+  _set_value "DEFAULT_BLOG_ID" "$BLOG_ID" "$HATEBLOG_COMMON_CONFIG_FILE"
+fi
+

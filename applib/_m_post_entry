@@ -1,0 +1,81 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFilePath}
+CMD_NAME=$(basename $0)
+
+TMP_HEADER="${HATEBLOG_TMP_DIR}/${CMD_NAME}.header.$(_now).$$"
+TMP_BODY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.body.$(_now).$$"
+TMP_ENTRY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.entry.$(_now).$$"
+
+# Function
+cleanup_exit(){
+  rm "$TMP_HEADER" "$TMP_BODY" "$TMP_ENTRY" 1>/dev/null 2>&1
+  exit $1
+}
+trap 'cleanup_exit 9' HUP INT QUIT TERM
+
+# Parameters
+ENTRY_FILE="$1"
+
+# Set EntryID
+ENTRY_ID=$(sed -n '1p' "$ENTRY_FILE" | _trim)
+ENTRY_PATH=entry${ENTRY_ID:+/$ENTRY_ID}
+
+# Set method & Preview
+if [ -n "$ENTRY_ID" ]; then
+  # Put to exist entry
+  HTTP_METHOD=PUT
+  HTTP_RES_OK_CODE=200
+else
+  # Post to new entry
+  HTTP_METHOD=POST
+  HTTP_RES_OK_CODE=201
+fi
+
+# Post entry file?
+_prompt_yesno "Upload now?"
+[ $? -ne 0 ] && cleanup_exit 1
+
+# Draft entry?
+_prompt_yesno "Draft?"
+[ $? -eq 0 ] && draft=yes || draft=no
+
+# Post entry
+_s_entry_md2xml "$ENTRY_FILE"                                 \
+| sed "s%<app:draft>.*$%<app:draft>${draft}</app:draft>%"     \
+| hblg-req $HTTP_METHOD "$ENTRY_PATH" "$HATEBLOG_CONFIG_FILE" -v 2> "$TMP_HEADER" > "$TMP_BODY"
+cat "$TMP_HEADER" | grep "^< HTTP/.* ${HTTP_RES_OK_CODE}" 1>/dev/null
+if [ $? -eq 0 ]; then
+  # Request success
+  EXIT_STATUS=0
+
+  # Diff posted result content
+  cat "$TMP_BODY" | _f_entry_xml2md > "$TMP_ENTRY"
+  diff "$ENTRY_FILE" "$TMP_ENTRY" 1>/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    $HATEBLOG_DIFF_VIEWER "$ENTRY_FILE" "$TMP_ENTRY"
+    _prompt_yesno "Update local entry file(by server saved content)?"
+    if [ $? -ne 0 ]; then
+      echo "No update local entry file!"
+      cleanup_exit $EXIT_STATUS
+    fi
+  fi
+
+  # Remove old entry file
+  _m_delete_entry_file "$ENTRY_FILE"
+
+  # Update list file
+  NEW_LIST_LINE=$(cat "$TMP_BODY" | _f_entry_xml2list)
+  _m_update_list_file "$NEW_LIST_LINE" "$ENTRY_ID"
+
+  # Save entry file
+  cat "$TMP_BODY" | _e_save_entry_file "$NEW_LIST_LINE"
+else
+  # Request faild
+  EXIT_STATUS=3
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+fi
+
+# Cleanup
+cleanup_exit $EXIT_STATUS
+

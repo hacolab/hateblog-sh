@@ -1,0 +1,38 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0
+
+clean_link_tag() {
+  # <link rel="rel_val" href="URL" /> ==> <rel_val>URL</rel_val>
+  sed 's#<link rel="\([^"]*\).*href="\([^"]*\)".*#<\1>\2</\1>#'
+}
+clean_category_tag() {
+  # <category term="name" /> ==> <category>name</category>
+  sed 's#<category term="\([^"]*\)".*$#<category>\1</category>#'
+}
+clean_author_tag() {
+  # <name>author</name> ==> author
+  sed 's#<name>\(.*\)</name>#\1#'
+}
+clean_app_tag() {
+  # <app:tag>value</app:tag> ==> <tag>value</tag>
+  sed 's#^<app:\([^ >]*\)[^>]*>#<\1>#'    \
+  | sed 's#</app:\([^ >]*\)[^>]*>#</\1>#'
+}
+delete_tag_attr() {
+  # <tag attr="...">value</tag> ==> <tag>value</tag>
+  sed 's#^<\([^ >]*\)[^>]*>#<\1>#'
+}
+make_entry_id_tag() {
+  # <edit>path/EntryID</edit> ===> <edit>path/EntryID</edit><entry_id>EntryID</entry_id>
+  sed 's#<edit>\(.*/\)\([0-9]*\)</edit>#<edit>\1\2</edit><entry_id>\2</entry_id>#'
+}
+
+sed -e 's/^[ ]*//' -e 's/[ ]*$//' \
+| clean_link_tag                  \
+| clean_category_tag              \
+| clean_author_tag                \
+| clean_app_tag                   \
+| make_entry_id_tag               \
+| delete_tag_attr
+

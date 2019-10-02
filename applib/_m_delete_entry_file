@@ -1,0 +1,42 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+
+# Parameters
+ENTRY_FILE="$1"
+[ ! -f "$ENTRY_FILE" ] && exit 0
+ 
+ENTRY_ID=$(cat "$ENTRY_FILE" | head -n 1 | _trim)
+
+# Set backup path
+if [ -z "$ENTRY_ID" ]; then
+  # Remove draft file
+  ENTRY_TITLE=$(sed -n '5p' < "$ENTRY_FILE" \
+    | _f_title_to_path )
+  FROM_PATH="$ENTRY_FILE"
+  TO_PATH="${HATEBLOG_TRASH_DIR}/${ENTRY_TITLE}.md"
+else
+  # Remove entry file
+  DIR_NAME=$(dirname "$ENTRY_FILE")
+  DIR_NAME="${DIR_NAME##*/}"
+  DIR_NAME="${DIR_NAME%/*}"
+  FROM_PATH="${HATEBLOG_ENTRY_DIR}/${DIR_NAME}"
+  TO_PATH="${HATEBLOG_TRASH_DIR}/"
+fi
+
+# Remove entry files
+if [ -f "$FROM_PATH" -o -d "$FROM_PATH" ]; then
+  case "$HATEBLOG_AUTO_BACKUP" in
+    ON|On|on|oN )
+      cp -Rpf "${FROM_PATH}" "${TO_PATH}"
+      if [ $? -eq 0 ]; then
+        echo "backup to '${TO_PATH}'" 1>&2
+        rm -rf "${FROM_PATH}"
+      fi
+      ;;
+    * )
+      rm -rf "${FROM_PATH}"
+      ;;
+  esac
+fi
+

@@ -1,0 +1,54 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 
+
+# Select edit entry by user
+SELECTED_ENTRY=$(_m_select_entry)
+
+# Cancel?
+[ -z "$SELECTED_ENTRY" ] && exit 0
+
+ENTRY_ID=$(echo "$SELECTED_ENTRY" | _f_list_pick_items entry_id)
+ENTRY_FILE=$(_s_entry_file_path "$SELECTED_ENTRY")
+
+# Exist entry file?
+if [ ! -f "$ENTRY_FILE" ]; then
+  _m_download_entry_file "$SELECTED_ENTRY"
+  if [ $? -ne 0 ]; then
+    _print_error "entry download error!"
+    exit 3
+  fi
+fi
+
+# Edit entry file by user
+$HATEBLOG_EDITOR "$ENTRY_FILE"
+
+# Check EntryID (list vs entry file)
+LIST_ENTRY_ID=$(echo ${SELECTED_ENTRY} | _f_list_pick_items entry_id)
+FILE_ENTRY_ID=$(sed -n '1p' "$ENTRY_FILE" | _trim)
+ENTRY_ID=$FILE_ENTRY_ID
+if [ "$LIST_ENTRY_ID" != "$FILE_ENTRY_ID" ]; then
+  # Select use EntryID by user
+  _print_error "Not equal EntryID by list vs edited entry file!"
+  cat <<- ENTRY_ID_DIFF_END
+List  : ${LIST_ENTRY_ID}
+TxFile: ${FILE_ENTRY_ID}
+ENTRY_ID_DIFF_END
+  _prompt_yesno "Use EntryID by edited entry file?"
+  if [ $? -eq 0 ]; then
+    ENTRY_ID=$FILE_ENTRY_ID
+    echo "... OK, use EntryID by edited entry file '${FILE_ENTRY_ID}'!" 1>&2
+  else
+    echo "... OK, use EntryID by list. Overwrite to edited entry file!" 1>&2
+    sed -i '' "1s/^.*$/${LIST_ENTRY_ID}/" "$ENTRY_FILE"
+  fi
+fi
+
+# Preiview diff old vs new entry
+_m_preview_edit_entry "$ENTRY_ID" "$ENTRY_FILE"
+
+# Post entry
+_m_post_entry "$ENTRY_FILE" "$SELECTED_ENTRY"
+
+exit $?
+

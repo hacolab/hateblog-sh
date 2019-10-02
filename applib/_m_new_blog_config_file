@@ -1,0 +1,29 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ConfigPath} [BlogId]
+
+# Parameters
+CONFIG_PATH=$1
+BLOG_ID=${2:-""}
+
+# Only user readable
+umask 0077 1>/dev/null 2>&1
+
+# Make Blog's config directory
+CONFIG_DIR=$(dirname "$CONFIG_PATH")
+mkdir -p "$CONFIG_DIR"
+
+# Output config file format
+cat <<- CONFIG_END > "${CONFIG_PATH}"
+# Your Blog ID : exp) blog-name.hatena.com
+BLOG_ID=${BLOG_ID}
+# Your hatena ID
+HATENA_ID=
+# Your hatena blog api key
+API_KEY=
+# Auto backup enable(ON|OFF)
+AUTO_BACKUP=OFF
+CONFIG_END
+
+umask 0022 1>/dev/null 2>&1
+

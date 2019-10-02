@@ -1,0 +1,10 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {dirpath}
+
+# main code
+cd "$( dirname ${1} )"
+pwd
+
+#expr "${0}" : "/.*" > /dev/null || 
+

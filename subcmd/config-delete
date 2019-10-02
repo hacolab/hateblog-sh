@@ -1,0 +1,31 @@
+#!/bin/sh -u
+#+[USAGE]
+#+ $0
+
+# BlogID select
+if [ $( _s_listup_blog_configs | grep -c "^" ) -eq 0 ]; then
+  # if not found any config, user input BlogID
+  _print_error "Not found any blog config!"
+  exit 2
+fi
+
+# Select exist BlogID
+BLOG_ID=$(_m_select_blog)
+
+# Cancel?
+[ -z "$BLOG_ID" ] && exit 0
+
+# Operate config
+CONFIG_FILE="${HATEBLOG_CONFIG_DIR}/${BLOG_ID}/config"
+
+[ ! -f "$CONFIG_FILE" ] && exit 0
+
+# Delete config file
+_prompt_yesno "Delete $BLOG_ID's config?"
+if [ $? -eq 0 ]; then
+  rm -rf "${HATEBLOG_CONFIG_DIR}/${BLOG_ID}"
+  exit $?
+fi
+
+exit 0
+

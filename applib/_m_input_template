@@ -1,0 +1,10 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+TEMPLATE_NAME_PATTERN='^[^/]+$'
+
+_prompt_text "New Template Name" "$TEMPLATE_NAME_PATTERN" \
+| _trim \
+| sed "s%^\(.*\)$%${HATEBLOG_TEMPLATE_DIR}/\1.md%"
+

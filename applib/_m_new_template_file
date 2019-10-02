@@ -1,0 +1,21 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {TemplatePath}
+
+TEMPLATE_PATH=$1
+AUTHOR=$(_get_value HATENA_ID < "$HATEBLOG_CONFIG_FILE")
+DRAFT_STATE=yes
+CATEGORY="(exp cate1,cate2...)"
+
+# Output template format
+cat <<- TEMPLATE_END > "${TEMPLATE_PATH}"
+
+
+$DRAFT_STATE
+$CATEGORY
+#Title
+
+[:contents]
+
+TEMPLATE_END
+

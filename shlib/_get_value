@@ -1,0 +1,14 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ItemName} [DefaultValue]
+
+# main code
+ITEM_NAME=$1
+DEFAULT_VALUE=${2:-""}
+if [ -n "$DEFAULT_VALUE" ]; then
+  ITEM_VALUE=$(sed -n "s/^${ITEM_NAME}=\(.*\)[^ ]*$/\1/p")
+  [ -n "$ITEM_VALUE" ] && echo "$ITEM_VALUE" || echo "$DEFAULT_VALUE"
+else
+  sed -n "s/^${ITEM_NAME}=\(.*\)[^ ]*$/\1/p"
+fi
+

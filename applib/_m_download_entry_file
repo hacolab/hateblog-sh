@@ -1,0 +1,34 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryListLine}
+
+TMP_BODY="${HATEBLOG_TMP_DIR}/$(basename $0).body.$(_now).$$"
+
+# Functions
+cleanup_exit() {
+  rm "$TMP_BODY" 1>/dev/null 2>&1
+  exit $1
+}
+trap 'cleanup_exit 9' HUP INT QUIT TERM
+
+# Parameters
+ENTRY_LINE="$1"
+ENTRY_ID=$(echo "$ENTRY_LINE" | _f_list_pick_items entry_id)
+ENTRY_TITLE=$(echo "$ENTRY_LINE" | _f_list_pick_items title | _xml_unescape_char)
+
+# Print entry name
+echo "download ... ${ENTRY_ID}:${ENTRY_TITLE}" 1>&2
+
+# Save entry
+_s_fetch_entry "$ENTRY_ID" > "$TMP_BODY"
+if [ $? -eq 0 ]; then
+  cat "$TMP_BODY" | _e_save_entry_file "$ENTRY_LINE"
+  EXIT_STATUS=0
+else
+  # Request faild
+  EXIT_STATUS=3
+fi
+
+# Cleanup
+cleanup_exit $EXIT_STATUS
+

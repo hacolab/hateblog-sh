@@ -1,0 +1,17 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Select template file by user
+SELECTED_TEMPLATE=$(_m_select_template)
+
+# Cancel?
+[ -z "$SELECTED_TEMPLATE" ] && exit 0
+
+# Delete template file
+TEMPLATE_NAME=$(basename "$SELECTED_TEMPLATE")
+_prompt_yesno "Delete ${TEMPLATE_NAME%.*}?"
+[ $? -eq 0 ] && rm -f "$SELECTED_TEMPLATE"
+
+exit 0
+

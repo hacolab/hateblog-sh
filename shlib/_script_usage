@@ -1,0 +1,10 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ScriptPath}
+
+# main code
+CMD_NAME=$(basename "$1")
+USAGE_CHAR=${2:-'+'}
+sed -n "/^#${USAGE_CHAR}/s/^#${USAGE_CHAR}//p" "$1" \
+| sed "s/\$0/${CMD_NAME}/g" 1>&2
+

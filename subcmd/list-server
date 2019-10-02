@@ -1,0 +1,13 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Parameters
+ITEMS="$@"
+
+# Get Remote New List
+_s_fetch_entry \
+| _f_entry_xml2list $ITEMS
+
+exit $?
+

@@ -1,0 +1,7 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ScriptPath}
+
+# main code
+sed -n "/^# \[VERSION\]/s/^# \[VERSION\] *//p" "$1"
+

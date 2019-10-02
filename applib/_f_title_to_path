@@ -1,0 +1,13 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 [SlashReplaceChar]
+
+# Parameters
+SLASH_REPLACE_CHAR=${1:-'-'}
+
+# main code
+_xml_unescape_char              \
+| tr '/' "$SLASH_REPLACE_CHAR"  \
+| sed -e 's/^# \{0,1\}//'       \
+| _trim
+

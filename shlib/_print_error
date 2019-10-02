@@ -1,0 +1,6 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ErrMsg1} [{ErrMsg2,ErrMsg3....}]
+
+# main code
+printf "\033[0;31m%s\033[0;39m\n" "$*" 1>&2

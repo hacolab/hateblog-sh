@@ -1,0 +1,43 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+CMD_NAME=$(basename $0)
+
+# Local config
+TMP_ENTRY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.$(_now).$$"
+
+# Make entry header
+ENTRY_HEADER=$(tee "$TMP_ENTRY"   \
+  | _f_entry_pick_tags header     \
+  | _f_entry_format_tags          \
+  | _f_entry_perline_tags         \
+  | _f_entry_format_list updated draft edit category title)
+
+ENTRY_ID=$(echo "$ENTRY_HEADER" \
+  | cut -f 3 -d '>'             \
+  | sed 's@^.*/\([0-9]*\)$@\1@')
+
+ENTRY_CATEGORY=$(echo "$ENTRY_HEADER"  \
+  | cut -f 4 -d'>'                     \
+  | _xml_unescape_char)
+
+ENTRY_TITLE=$(echo "$ENTRY_HEADER"  \
+  | cut -f 5 -d'>'                  \
+  | _xml_unescape_char)
+
+echo "$ENTRY_ID"
+echo "$ENTRY_HEADER"  \
+| tr '>' '\n'         \
+| head -n 2
+echo "$ENTRY_CATEGORY"
+echo "#$ENTRY_TITLE"
+
+# Make entry content
+cat "$TMP_ENTRY"              \
+| _f_entry_pick_tags content  \
+| _xml_strip_tag              \
+| _xml_unescape_char
+
+# cleanup
+rm "$TMP_ENTRY" 2>/dev/null
+

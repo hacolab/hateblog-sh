@@ -1,0 +1,11 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Move work directory
+cd "$HATEBLOG_CONFIG_DIR"
+
+_s_listup_blog_configs              \
+| eval "$HATEBLOG_CONFIG_SELECTOR"  \
+| sed "s%^\(.*\)/config$%\1%"
+

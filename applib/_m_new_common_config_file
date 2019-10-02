@@ -1,0 +1,25 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ConfigPath}
+
+# Parameters
+CONFIG_PATH=$1
+
+# Make Blog's config directory
+CONFIG_DIR=$(dirname "$CONFIG_PATH")
+mkdir -p "$CONFIG_DIR"
+
+# Output config file format
+cat <<- CONFIG_END > "${CONFIG_PATH}"
+# Use default BlogID (auto set this value)
+DEFAULT_BLOG_ID=
+# Use editor (if null use '\$EDITOR' or vi)
+EDITOR=
+# Diff viewer (when not equal post response vs local file)
+DIFF_VIEWER=diff -u
+# File selector (Use command 'draft edit', 'config edit', etc...)
+FILE_SELECTOR=fzf --select-1 --no-sort --preview='head -n 60 {}'
+# Not File list selector (Use 'edit')
+LINE_SELECTOR=fzf --select-1 --no-sort
+CONFIG_END
+

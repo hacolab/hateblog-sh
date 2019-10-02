@@ -1,0 +1,22 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# BlogID select
+BLOG_ID=$(_m_input_blogid)
+
+# Cancel?
+[ -z "$BLOG_ID" ] && exit 0
+
+# Edit config file
+CONFIG_FILE="${HATEBLOG_CONFIG_DIR}/${BLOG_ID}/config"
+if [ ! -f "$CONFIG_FILE" ]; then
+  _m_new_blog_config_file "$CONFIG_FILE" "$BLOG_ID"
+fi
+$HATEBLOG_EDITOR "$CONFIG_FILE"
+
+# Make default file link
+_m_set_default_blog "$BLOG_ID"
+
+exit $?
+

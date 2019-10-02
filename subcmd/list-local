@@ -1,0 +1,13 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Parameters
+ITEMS="$@"
+
+# Get New List
+cat "$HATEBLOG_LIST_FILE" \
+| _f_list_pick_items $ITEMS
+
+exit $?
+

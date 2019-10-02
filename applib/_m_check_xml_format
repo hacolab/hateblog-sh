@@ -1,0 +1,15 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+#+[EXIT_STATUS]
+#+  0   format OK
+#+  1   format NG
+
+ENTRY_FILE=$1
+
+# check entry id
+cat "$ENTRY_FILE" | grep -E '<?xml version="1.0" encoding="utf-8"?>' 1>/dev/null 2>&1
+[ $? -ne 0 ] && exit 1
+
+exit 0
+

@@ -1,0 +1,13 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryListLine}
+
+# Parameters
+ENTRY_LINE="$1"
+SAVE_PATH=$(_s_entry_file_path "$ENTRY_LINE")
+SAVE_DIR=$(dirname "$SAVE_PATH")
+
+# Save entry
+mkdir -p "$SAVE_DIR"
+_f_entry_xml2md > "$SAVE_PATH"
+

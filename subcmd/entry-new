@@ -1,0 +1,47 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 [TemplateName]
+CMD_NAME=$(basename $0)
+DRAFT_FILE="${HATEBLOG_DRAFT_DIR}/"$(date +"%Y%m%d%.%H%M%S")".$$.md"
+TEMPLATE_LIST_CMD="find ${HATEBLOG_TEMPLATE_DIR} -type f | sed 's%^.*/\([^/]*\)$%\1%'"
+
+# Parameters
+TEMPLATE_NAME=$(basename "${1:-}")
+
+# Move work directory
+cd "$HATEBLOG_TEMPLATE_DIR"
+
+# If template exist
+if [ -n "$TEMPLATE_NAME" ]; then
+  if [ ! -f "$TEMPLATE_NAME" ]; then
+    _print_error "Not found template : ${TEMPLATE_NAME}"
+    exit 1
+  fi
+
+  # Make draft file
+  cp "$TEMPLATE_NAME" "$DRAFT_FILE"
+elif [ $( eval "$TEMPLATE_LIST_CMD" | grep -c "^" ) -ne 0 ]; then
+  # Select template by user
+  SELECTED_TEMPLATE=$(eval "$TEMPLATE_LIST_CMD" \
+  | eval "$HATEBLOG_TEMPLATE_SELECTOR")
+
+  # Cancel?
+  [ ! -f "$SELECTED_TEMPLATE" ] && exit 0
+
+  # Make draft file
+  cp "$SELECTED_TEMPLATE" "$DRAFT_FILE"
+else
+  # Make draft file from default template
+  _m_new_template_file "$DRAFT_FILE"
+fi
+
+# Edit draft file
+$HATEBLOG_EDITOR "$DRAFT_FILE"
+DRAFT_FILE=$(_m_rename_draft_file "$DRAFT_FILE")
+
+# Preview
+#_m_preview_new_entry "$DRAFT_FILE"
+
+# Post entry file?
+_m_post_entry "$DRAFT_FILE"
+

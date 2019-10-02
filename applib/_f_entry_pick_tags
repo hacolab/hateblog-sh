@@ -1,0 +1,44 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0 [ListItems,...]
+
+USE_SED=
+for arg in "$@" ; do
+    case $arg in
+        detail  )
+            PICK_TAGS='<(title|updated|published|app:edited|app:draft|author)>|<(link|category|summary) '
+            ;;
+        simple  )
+            PICK_TAGS='<(title|published|app:draft|author)>|<(link|category) '
+            ;;
+        entry   )
+            PICK_TAGS='/<entry[> ]/,/<\/entry>/'
+            USE_SED=true
+            ;;
+        content )
+            PICK_TAGS='/<content /,/<\/content>/'
+            USE_SED=true
+            ;;
+        header )
+            PICK_TAGS='<(title|updated|app:draft|author)>|<(link|category)'
+            ;;
+        formated)
+            PICK_TAGS='/<hatena:formatted-content /,/<\/hatena:formatted-content>/'
+            USE_SED=true
+            ;;
+        -s      )
+            USE_SED=true
+            ;;
+        *       )
+            PICK_TAGS="$arg"
+            ;;
+    esac
+done
+
+if [ -n "$USE_SED" ]; then
+    sed -n "${PICK_TAGS}p"
+else
+    sed -n '/<entry[> ]/,/<\/entry>/p' \
+        | grep -E "${PICK_TAGS}|<[/]?entry>"
+fi
+

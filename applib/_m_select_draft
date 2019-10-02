@@ -1,0 +1,12 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Move work directory
+cd "$HATEBLOG_DRAFT_DIR"
+
+# Select draft file by user
+_s_listup_draft_files             \
+| eval "$HATEBLOG_DRAFT_SELECTOR" \
+| sed "s%^\(.*\)$%${HATEBLOG_DRAFT_DIR}/\1%"
+

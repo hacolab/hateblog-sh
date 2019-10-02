@@ -1,0 +1,19 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Edit common config file
+$HATEBLOG_EDITOR "$HATEBLOG_COMMON_CONFIG_FILE"
+
+# Check BlogID
+BLOG_ID=$(_get_value DEFAULT_BLOG_ID < "$HATEBLOG_COMMON_CONFIG_FILE")
+if [ -f "${HATEBLOG_CONFIG_DIR}/${BLOG_ID}/config" ]; then
+  # Exist default blog config
+  exit 0
+else
+  # Not exist default blog config
+  _print_error "'${HATEBLOG_CONFIG_DIR}/${BLOG_ID}/config' is not found!"
+  _print_error "Please execute command 'hblg config new' or 'hblg config edit'"
+  exit 2
+fi
+

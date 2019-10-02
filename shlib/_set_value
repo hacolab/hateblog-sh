@@ -1,0 +1,11 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {ItemName} {SetValue} {FilePath}
+
+# main code
+ITEM_NAME="$1"
+SET_VALUE="$2"
+FILE_PATH="$3"
+
+sed -i '' "s/^${ITEM_NAME}=.*$/${ITEM_NAME}=${SET_VALUE}/" "$FILE_PATH"
+

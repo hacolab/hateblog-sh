@@ -1,0 +1,11 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Move work directory
+cd "$HATEBLOG_TEMPLATE_DIR"
+
+_s_listup_template_files              \
+| eval "$HATEBLOG_TEMPLATE_SELECTOR"  \
+| sed "s%^\(.*\)$%${HATEBLOG_TEMPLATE_DIR}/\1%"
+

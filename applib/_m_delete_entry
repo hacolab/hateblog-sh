@@ -1,0 +1,39 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryID} {EntryFile}
+
+TMP_HEADER="${HATEBLOG_TMP_DIR}/$(basename $0).header.$(_now).$$"
+TMP_BODY="${HATEBLOG_TMP_DIR}/$(basename $0).body.$(_now).$$"
+
+# Functions
+cleanup_exit() {
+  rm "$TMP_HEADER" "$TMP_BODY" 1>/dev/null 2>&1
+  exit $1
+}
+trap 'cleanup_exit 9' HUP INT QUIT TERM
+
+# Params
+ENTRY_ID=$1
+ENTRY_FILE=$2
+
+# Delete entry
+hblg-req DELETE "entry/$ENTRY_ID" "$HATEBLOG_CONFIG_FILE" -v 2> "$TMP_HEADER" > "$TMP_BODY"
+cat "$TMP_HEADER" | grep '^< HTTP/.* 200' >/dev/null
+if [ $? -eq 0 ]; then
+  # Reuest success
+  EXIT_STATUS=0
+
+  # Delete entry directory
+  _m_delete_entry_file "$ENTRY_FILE"
+
+  # Update entry list
+  _m_update_list_file "" "$ENTRY_ID"
+else
+  # Request failed
+  EXIT_STATUS=3
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+fi
+
+# Cleanup
+cleanup_exit $EXIT_STATUS
+

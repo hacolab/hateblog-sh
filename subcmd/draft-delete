@@ -1,0 +1,17 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+
+# Select draft file by user
+DRAFT_FILE=$(_m_select_draft)
+
+# Cancel?
+[ -z "$DRAFT_FILE" ] && exit 0
+
+# DELETE draft file
+FILE_NAME=$(basename "$DRAFT_FILE")
+_prompt_yesno "Delete ${FILE_NAME}?"
+[ $? -eq 0 ] && rm -f "$DRAFT_FILE"
+
+exit $?
+

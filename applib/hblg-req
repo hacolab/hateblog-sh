@@ -1,0 +1,220 @@
+#!/bin/sh
+################################################################################
+#-This script is only send HTTP request to HatenaBlog's AtomPub API service,
+#-and output received HTTP response body to stdout.
+#-If GET request to entry collection page, auto try GET to next page.
+#-
+# [VERSION]             0.1.0
+#
+#+[USAGE]
+#+  $0 GET    <Path> <ConfigFile> [-v][-n FD][-l Count[:Target]]
+#+  $0 DELETE <Path> <ConfigFile> [-v]
+#+  $0 PUT    <Path> <ConfigFile> [-v][-f TxFile]
+#+  $0 POST   <Path> <ConfigFile> [-v][-f TxFile]
+#+
+#-[PARAMETERS]
+#-  <Path>              Send request URL.
+#-                      If start with 'https://', request to <Path>.
+#-                      Else, https://blog.hatena.ne.jp/<HatenaID>/<BlogID>/atom[/<Path>]
+#-
+#-  <ConfigFile>        HatenaBlog service auth info file. see [CONFIG-FORMAT].
+#-
+#-[OPTIONS]
+#-  -v                  Print HTTP header to stderr(use curl -v option).
+#-
+#-  -V                  Print script version.
+#-
+#-  -h                  Print this help.
+#-
+#-  -n FD               Next page URL output to FD.
+#-                      FD is file descriptor(1 or 2), or file path. default 2.
+#-                      If file exist, overwrite file.
+#-
+#-  -l Count[:Target]   Limit count of match 'Target' pattern count.
+#-                      If match count >= Num, don't get next link page, command exit.
+#-                      If 'Target' is not set, count to "<entry>". pattern is grep -E use.
+#-                      If not set '-l', get next page while found for '<link rel="next"'
+#-
+#-  -f TxFile           POST or PUT HTTP request body contents from TxFile.
+#-                      If not set `-f`, read from stdin.
+#-                      contents format is XML. See [REFERENCE:1].
+#-[STDIN]
+#-                      -
+#-[STDOUT]
+#-                      HatenaBlog AtomPub response body
+#-[STDERR]
+#-                      see '-n', '-v' in [Options]
+#-[CONFIG-FORMAT]
+#-                      BLOG_ID=<YourBlogID>      exp.) example.hatenablog.com
+#-                      HATENA_ID=<YourHatenaID>
+#-                      API_KEY=<YourKey>
+#-[DEPENDENCY]
+#-  curl                https://curl.haxx.se/
+#-
+#-[REFERENCE]
+#-  :1                  http://developer.hatena.ne.jp/ja/documents/blog/apis/atom
+#-
+################################################################################
+#==================================================
+# App config
+#==================================================
+CMD_NAME=$(basename $0)
+APP_NAME=hateblog
+TMP_DIR="/tmp/${APP_NAME}"
+TMP_HEADER="${TMP_DIR}/${CMD_NAME}.header.$$"
+TMP_BODY="${TMP_DIR}/${CMD_NAME}.body.$$"
+
+[ ! -d "$TMP_DIR" ] && mkdir -p "${TMP_DIR}"
+
+#==================================================
+# Help & Error
+#==================================================
+usage_exit() {
+  echo "$1" 1>&2
+  sed -n '/^#+/s/^#+//p' "$0" | sed "s/\$0/${CMD_NAME}/g" 1>&2
+  exit 1
+}
+help_exit() {
+  sed -n '/^#[-+]/s/^#[-+]//p' "$0" | sed "s/\$0/${CMD_NAME}/g" 1>&2
+  exit 0
+}
+version_exit() {
+  sed -n "/^# \[VERSION\]/s/^# \[VERSION\] *//p" "$0" 1>&2
+  exit 0
+}
+error_exit() {
+  echo "ERROR: $1" 1>&2
+  exit 2
+}
+
+#==================================================
+# Set parameters
+#==================================================
+HTTP_METHOD="$1"
+REQUEST_URL="$2"
+CONFIG_FILE="$3"
+shift 3
+
+#==================================================
+# Analyze options
+#==================================================
+TX_FILE=-
+COUNT_PATTERN=
+LIMIT_COUNT=0
+PRINT_HEADER=
+PRINT_NEXT_URL=
+FD_OF_NEXT_URL=2
+while getopts f:hl:n:vV OPT; do
+  case "$OPT" in
+    f )
+      TX_FILE="$OPTARG"
+      [ ! -f "$TX_FILE" ] && error_exit "TxFile dose not found: '$TX_FILE'"
+      ;;
+    h )
+      help_exit
+      ;;
+    l )
+      # -l Limit-Count[:pattern]
+      if [ $(echo "$OPTARG" | grep -c ":") -eq "0" ]; then
+        LIMIT_COUNT=$OPTARG
+        COUNT_PATTERN="<entry>"
+      else
+        LIMIT_COUNT="${OPTARG%%:*}"
+        COUNT_PATTERN="${OPTARG##*:}"
+      fi
+      ;;
+    n )
+      PRINT_NEXT_URL=true
+      FD_OF_NEXT_URL="$OPTARG"
+      ;;
+    v )
+      PRINT_HEADER=true
+      ;;
+    V )
+      version_exit
+      ;;
+    \?)
+      usage_exit
+      ;;
+  esac
+done
+shift $(expr $OPTIND - 1)
+
+#==================================================
+# Load default auth info
+#==================================================
+[ ! -f "$CONFIG_FILE" ] && error_exit "File not found: '$CONFIG_FILE'"
+get_value() {
+    sed -n "s/^$1=\(.*\)[^ ]*$/\1/p"
+}
+BLOG_ID=$(get_value BLOG_ID < "$CONFIG_FILE")
+HATENA_ID=$(get_value HATENA_ID < "$CONFIG_FILE")
+API_KEY=$(get_value API_KEY < "$CONFIG_FILE")
+
+# Check user auth info
+[ -z "$BLOG_ID" ] && error_exit "'BLOG_ID' is null!"
+[ -z "$API_KEY" ] && error_exit "'API_KEY' is null!"
+[ -z "$HATENA_ID" ] && error_exit "'HATENA_ID' is null!"
+
+# If not full path given.
+HATENA_ROOT='https://blog.hatena.ne.jp'
+if [ $(echo "${REQUEST_URL}" | grep -c "^https://") -eq 0 ]; then
+  REQUEST_URL="${HATENA_ROOT}/${HATENA_ID}/${BLOG_ID}/atom${REQUEST_URL:+"/$REQUEST_URL"}"
+fi
+
+#==================================================
+# Send request
+#==================================================
+CURL_OPT="-s -H 'Content-Type: applicatoin/xml' -X ${HTTP_METHOD} -u ${HATENA_ID}:${API_KEY}"
+[ -n "$PRINT_HEADER" ] && CURL_OPT="${CURL_OPT} -v"
+get_request_pages() {
+  # Clear temp
+  >| "$TMP_HEADER"
+
+  # Get collection pages
+  next_page=$1
+  count_pattern=$2
+  limit_count=$3
+  while :
+  do
+    # Send HTTP request
+    curl $CURL_OPT "$next_page" | tee "$TMP_BODY"
+
+    # Next page exist?
+    next_page=$(grep '<link rel="next"' < "$TMP_BODY" | sed 's/^.*href="\([^"]*\)".*/\1/')
+    [ -z "$next_page" ] && break
+
+    # No limit?
+    [ "$limit_count" -eq 0 ] && continue
+
+    # Over limit?
+    match_count=$(grep -Ec "$count_pattern" "$TMP_BODY")
+    [ "$limit_count" -le "$match_count" ] && break;
+    limit_count=$(expr $limit_count - $match_count)
+  done >&1
+
+  # Print next page URL
+  [ -z "$PRINT_NEXT_URL" ] && return
+  fomated_next_url="NEXT>$next_page"
+  case "$FD_OF_NEXT_URL" in
+    1 ) echo "$fomated_next_url" >&1  ;;
+    2 ) echo "$fomated_next_url" 1>&2 ;;
+    * ) echo "$fomated_next_url" > "$FD_OF_NEXT_URL" ;;
+  esac
+}
+
+# debug
+#echo "URL: ${REQUEST_URL}"
+#echo "OPT: ${CURL_OPT}"
+
+EXIT_STATUS=0
+case "$HTTP_METHOD" in
+  GET      )  get_request_pages "$REQUEST_URL" "$COUNT_PATTERN" "$LIMIT_COUNT" ;;
+  DELETE   )  curl $CURL_OPT "$REQUEST_URL" ;;
+  PUT|POST )  curl $CURL_OPT --data-binary @"$TX_FILE" "$REQUEST_URL" ;;
+  *        )  error_exit "Invalid method '$HTTP_METHOD'" ;;
+esac
+
+# Clean up
+rm "$TMP_HEADER" "$TMP_BODY" 2>/dev/null
+

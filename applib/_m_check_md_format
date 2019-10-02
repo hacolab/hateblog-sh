@@ -1,0 +1,23 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryFile}
+#+[EXIT_STATUS]
+#+  0   format OK
+#+  1   format NG
+
+ENTRY_FILE=$1
+
+# check entry id
+sed -n '1p' "$ENTRY_FILE" | grep -E '^([0-9]*|)$' 1>/dev/null 2>&1
+[ $? -ne 0 ] && exit 1
+
+# check draft status
+sed -n '3p' "$ENTRY_FILE" | grep -E '^(yes|no)$' 1>/dev/null 2>&1
+[ $? -ne 0 ] && exit 1
+
+# check title
+sed -n '5p' "$ENTRY_FILE" | grep -E '^#' 1>/dev/null 2>&1
+[ $? -ne 0 ] && exit 1
+
+exit 0
+

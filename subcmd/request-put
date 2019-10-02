@@ -1,0 +1,79 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0
+CMD_NAME=$(basename "$0")
+TMP_BODY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.body.$(_now).$$"
+TMP_HEADER="${HATEBLOG_TMP_DIR}/${CMD_NAME}.header.$(_now).$$"
+TMP_ENTRY="${HATEBLOG_TMP_DIR}/${CMD_NAME}.tx.$(_now).$$"
+
+# Function
+cleanup_exit(){
+  rm "$TMP_HEADER" "$TMP_BODY" "$TMP_ENTRY" 1>/dev/null 2>&1
+  exit $1
+}
+
+# Parameters
+ENTRY_FILE="$1"
+shift
+ENTRY_ID="${1:-}"
+
+HTTP_RES_OK_CODE=200
+
+# Check EntryFile format
+if [ -f "$ENTRY_FILE" ]; then
+  _m_check_xml_format "$ENTRY_FILE"
+  if [ $? -eq 0 ]; then
+    if [ -z "$ENTRY_ID" ]; then
+      _print_error "Need EntryID by command argument!"
+      exit 1
+    fi
+    cat "$ENTRY_FILE" > "$TMP_ENTRY"
+  else
+    _m_check_md_format "$ENTRY_FILE"
+    if [ $? -eq 0 ]; then
+      # Convert md to xml
+      _s_entry_md2xml "$ENTRY_FILE" > "$TMP_ENTRY"
+    else
+      # Invalid format
+      _print_error "Invalid md file format!"
+      exit 1
+    fi
+  fi
+else
+  # Not found ENTRY_FILE
+  _print_error "ENTRY_FILE is not found!"
+  exit 1
+fi
+
+# Set Send URL
+if [ -z "$ENTRY_ID" ]; then
+  # Send URL by EntryFile
+  ENTRY_ID=$(sed -n "1p" "$ENTRY_FILE" | _trim)
+  if [ -z "$ENTRY_ID" ]; then
+    _print_error "Please given target EntryID"
+    cleanup_exit 1
+  fi
+else
+  # Send URL by Argument
+  shift
+fi
+URL="entry/${ENTRY_ID}"
+
+# Request
+cat "$TMP_ENTRY" | hblg-req PUT "$URL" "$HATEBLOG_CONFIG_FILE" -v "$@" 2>"$TMP_HEADER" 1>"$TMP_BODY"
+
+# Check response
+cat "$TMP_HEADER" | grep "^< HTTP/.* ${HTTP_RES_OK_CODE}" 1>/dev/null
+if [ $? -eq 0 ]; then
+  # Requset success
+  cat "$TMP_BODY"
+  EXIT_STATUS=0
+else
+  # Request faild
+  cat "$TMP_HEADER" | grep "HTTP" 1>&2
+  EXIT_STATUS=1
+fi
+
+# Cleanup
+cleanup_exit $EXIT_STATUS
+

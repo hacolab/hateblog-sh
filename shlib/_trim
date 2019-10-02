@@ -1,0 +1,9 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 [trimchar]
+
+TRIM_CHAR=${1-' '}
+
+# main code
+sed -e "s/^${TRIM_CHAR}*//" -e "s/${TRIM_CHAR}*$//"
+

@@ -1,0 +1,16 @@
+#!/bin/sh -u
+#+[USAGE]
+#+  $0 {EntryListLine}
+
+# Parameters
+ENTRY_LIST_LINE=$1
+
+# main code
+#PUBLISHED=$(echo "$ENTRY_LIST_LINE" | _f_list_pick_items published)
+ENTRY_ID=$(echo "$ENTRY_LIST_LINE" | _f_list_pick_items entry_id)
+ENTRY_TITLE=$(echo "$ENTRY_LIST_LINE" \
+  | _f_list_pick_items title \
+  | _f_title_to_path)
+echo "${HATEBLOG_ENTRY_DIR}/${ENTRY_ID}/${ENTRY_TITLE}.md"
+#echo "${HATEBLOG_ENTRY_DIR}/${PUBLISHED}/${ENTRY_ID}_${ENTRY_TITLE}.md"
+
