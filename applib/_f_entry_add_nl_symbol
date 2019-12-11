@@ -1,0 +1,20 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0
+
+# Newline mark of hatena blog
+NEWLINE="  "
+
+# Append newline mark to continue line
+# step 1. Append NL to all line
+# step 2. If NL continues more than once, Remove NL
+# step 3. Remove NL from blank line & markdown syntax
+sed -e 's/^\([^ ]*\)$/\1'"${NEWLINE}"'/'            \
+-e 's/'"${NEWLINE}${NEWLINE}"'$/'"${NEWLINE}"'/'    \
+-e "s/^${NEWLINE}$//"                               \
+-e 's/^\s*\([#>|\[-]\)\(.*\)'"${NEWLINE}"'$/\1\2/'  \
+-e '/^```/,/^```/s/'"${NEWLINE}"'$//'               \
+| tr '\n' '>'                                       \
+| sed 's/'"${NEWLINE}"'>>/>>/'                      \
+| tr '>' '\n'
+

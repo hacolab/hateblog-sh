@@ -13,6 +13,7 @@ draft=$(sed -n '3p' < "$ENTRY_FILE")
 category=$(sed -n '4p' < "$ENTRY_FILE" | _xml_escape_char)
 title=$(sed -n '5p' < "$ENTRY_FILE" | _xml_escape_char | sed 's/^# \{0,1\}//')
 
+
 # Header
 cat <<- ENDHEADER
 <?xml version="1.0" encoding="utf-8"?>
@@ -26,6 +27,7 @@ ENDHEADER
 printf '%s' '<content type="text/markdown">'
 sed -n '6,$p' < "$ENTRY_FILE"   \
 | _xml_escape_char              \
+| _f_entry_add_nl_symbol        \
 | sed '$s/^\(.*\)$/\1<\/content>/'
 
 # Categories
