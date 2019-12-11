@@ -36,6 +36,7 @@ echo "#$ENTRY_TITLE"
 cat "$TMP_ENTRY"              \
 | _f_entry_pick_tags content  \
 | _xml_strip_tag              \
+| _f_entry_delete_nl_symbol   \
 | _xml_unescape_char
 
 # cleanup

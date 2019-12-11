@@ -1,0 +1,10 @@
+#!/bin/sh
+#+[USAGE]
+#+  $0 < infile
+
+# Newline mark of hatena blog
+NEWLINE="  "
+
+# Add newline mark to continue line
+sed -e 's/'"${NEWLINE}"'$//'
+
