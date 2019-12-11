@@ -46,9 +46,11 @@ fi
 
 # Preiview diff old vs new entry
 _m_preview_edit_entry "$ENTRY_ID" "$ENTRY_FILE"
-
-# Post entry
-_m_post_entry "$ENTRY_FILE" "$SELECTED_ENTRY"
-
-exit $?
+if [ $? -ne 0 ]; then
+  # Post entry
+  _m_post_entry "$ENTRY_FILE" "$SELECTED_ENTRY"
+  exit $?
+else
+  exit 0
+fi
 
