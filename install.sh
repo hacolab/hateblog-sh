@@ -28,14 +28,11 @@ chmod +x subcmd/*
 chmod +x shlib/*
 chmod +x applib/*
 
-echo "... Complete append execute permit to scripts!"
-
 # Make symbolic link
 _prompt_yesno "Do you want to make link to hblg from other directory?"
 [ $? -ne 0 ] && exit 0
 
-echo "Please input make link directory path. exp) /home/user-name/bin"
-printf "%s" "Install Path> "
+printf "%s" "Link directory path> "
 read INSTALL_PATH
 
 CURRENT_DIR=$(pwd)
@@ -43,7 +40,7 @@ cd "$INSTALL_PATH" 2>/dev/null
 if [ $? -eq 0 ]; then
   ln -sf "${CURRENT_DIR}/hblg" "${INSTALL_PATH}/hblg"
   if [ $? -eq 0 ]; then
-    echo "... Complete linked to '${INSTALL_PATH}'!"
+    echo "... Linked to '${INSTALL_PATH}/hblg'!"
     echo "Let's config blog by 'hblg cn'"
   fi
 else

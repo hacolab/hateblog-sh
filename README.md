@@ -8,7 +8,7 @@
 - [Installation](#installation)
 - [Getting-Started-Guide](#getting-started-guide)
 - [Usage](#usage)
-- [Direcotry/File-Layout](#direcotryfile-Layout)
+- [Directory/File-Layout](#direcotryfile-Layout)
 - [Warning](#warning)
 - [Contribution](#contribution)
 - [Licence](#licence)
@@ -18,9 +18,9 @@
 ## Description
 下のような流れ作業を対話的にサクサクできるよ.
 
-- 記事の作成: テンプレートの選択 => 編集 => 投稿
-- 記事の編集: 記事の選択 => 編集 => 差分確認 => 投稿
-- 記事の削除: 記事の選択 => 削除
+- 記事の作成:　テンプレートの選択 --> 編集 --> 投稿
+- 記事の編集:　記事の選択 --> 編集 --> 差分確認 --> 投稿
+- 記事の削除:　記事の選択 --> 削除
 
 おまけに、非対話的に下のようなこともできちゃうよ.
 
@@ -50,7 +50,7 @@
 ## Installation
 好きなディレクトリにダウンロード後、ダウンロードディレクトリに移動して'install.sh'を実行してね.
 
-下は`~/.hateblog-sh`にインストールして、`/home/myname/bin`から実行用のリンクを貼る例だよ.
+下は`~/.hateblog-sh`にダウンロードして、`/home/myname/bin`から実行用のリンクを貼る例だよ.
 
 ```
 $ git clone https://github.com/hacolab/hateblog-sh ~/.hateblog-sh
@@ -58,223 +58,22 @@ $ cd ~/.hateblog-sh
 $ sh install.sh
 Hi, this is hateblog-sh install script.
 Do you want to install hateblog-sh on your system?(y/n)> y
-... Complete append execute permit to scripts!
 Do you want to make link to hblg from other directory?(y/n)> y
-Please input make link directory path. exp) /home/user-name/bin
-Install Path> /home/myname/bin
-... Complete linked to '/home/myname/bin'!
+Link directory path> /home/myname/bin
+... Linked to '/home/myname/bin/hblg'!
 Let's config blog by 'hblg cn'
 ```
 
-実際にやっていることは、必要なスクリプトに実行権限を追加して、指定ディレクトリからリンクを貼っているよ.  
-ディレクトリはパスの通ったディレクトリを指定してね.  
+実際にやっていることは、下の2つだよ.
+
+1. 必要なスクリプトに実行権限を追加
+2. 指定ディレクトリからリンクを貼る
+
+ディレクトリはパスの通ったディレクトリを指定してね.
 
 
 ## Getting Started Guide
-このシェルスクリプトを使いはじめるためのチュートリアルだよ.
-
-### ブログの登録
-インストールが終わったら、きみのブログを登録しよう.  
-下のコマンドを打つと、はてなブログIDの入力を求められる.  
-きみのはてなブログIDを入力してね.  
-例では`myblog.hatenablog.com`を入力しているよ.  
-
-```
-$ hblg config new       # ブログの登録(hblg cnでも同じ)
-New BlogID > myblog.hatenablog.com
-```
-
-入力を確定したら、設定ファイルの編集だ.  
-勝手に下のような設定ファイルをエディタで開くと思う.(#から始まるのはコメント行)  
-きみのはてなIDとAtomPubのAPIキーを入力しよう.
-AtomPubのAPIキーは[はてなブログの詳細設定ページ](http://blog.hatena.ne.jp/my/config/detail)で確認できるよ.  
-各設定項目の説明は[こちら](#各ブログ用の設定ファイル)を見てね.  
-
-```
-# Your Blog ID : exp) blog-name.hatena.com
-BLOG_ID=myblog.hatenablog.com
-# Your hatena ID
-HATENA_ID=
-# Your hatena blog api key
-API_KEY=
-# Auto backup enable(ON|OFF)
-AUTO_BACKUP=OFF
-```
-
-設定が終わったら、保存してエディタを閉じよう.  
-閉じると下のようにデフォルトのブログに設定するか確認されるよ.
-
-実はこのスクリプトは無駄に複数のブログを登録できるようになっているんだ.  
-ブログの指定は`-b`オプションでできるけど、指定しないときはデフォルトに設定したブログに対して操作を行うよ.  
-最初のブログなので必ず`y`を入力してEnterキーを押してね.
-
-```
-'myblog.hatenablog.com' set to default blog?(y/n)> y
-```
-
-設定が正しくできているか、下のコマンドで確認しよう.  
-ちょっとコマンドの実行終了まで時間がかかるかもしれない.  
-もし何もメッセージが出ずに終了したら正しく設定できていると思うよ.  
-
-```
-$ hblg fetch             # 記事リストの取得・作成
-```
-
-もし何かメッセージが出たとしたら、HTTPリクエストとレスポンスのメッセージじゃないかな？  
-下の表のエラーメッセージの原因と対策を確認してみてね.  
-
-|エラーメッセージ            |考えられる原因           |対策
-|:---------------------------|:------------------------|:-----------------------------
-|< HTTP/1.1 401 Unauthorized |はてなIDやAPIキーの誤り  |`hblg ce`で設定見直し
-|< HTTP/1.1 403 Forbidden    |ブログIDの誤り           |`hblg cn`で新しくブログを登録<br>`hblg cd`で誤ったブログ設定を削除
-
-その他のHTTPレスポンスについては[こちら](http://developer.hatena.ne.jp/ja/documents/blog/apis/atom#p6)を参考にしてね.
-
-### 使用するコマンドの設定(全ブログ共通設定)
-このスクリプトで使うツールを、きみが使いやすいものに変えておこう.
-下のコマンドを打つと、設定ファイルを開くよ.
-
-```
-$ hblg config common    # 共通設定の編集(hblg ccでも同じ)
-```
-
-設定ファイルは下みたいな感じ. (#から始まるのはコメント行)
-各設定項目の説明は[こちら](#共通の設定ファイル)を見てね.  
-
-```
-# Use default BlogID (auto set this value)
-DEFAULT_BLOG_ID=myblog.hatenablog.com
-# Use editor (if null use '\$EDITOR' or vi)
-EDITOR=
-# Diff viewer (when not equal post response vs local file)
-DIFF_VIEWER=diff -u
-# File selector (Use command 'draft edit', 'config edit', etc...)
-FILE_SELECTOR=fzf --select-1 --no-sort --preview='head -n 60 {}'
-# Not File list selector (Use 'edit')
-LINE_SELECTOR=fzf --select-1 --no-sort
-```
-
-記事の編集や差分確認に使う、EDITORとDIFF_VIEWERは変えておくと幸せかもしれない.  
-nvimを使いたい場合は下みたいな感じ.  
-
-```
-EDITOR=nvim
-DIFF_VIEWER=nvim -d
-```
-
-もし`fzf`ではなくて他の選択ツールを使いたい場合は、FILE_SELECTOR, LINE_SELECTORを変更しよう.
-[peco](https://github.com/peco/peco)を使いたい場合は下みたいな感じ.  
-今のところ複数選択には対応していないので注意してね.  
-
-```
-FILE_SELECTOR=peco --select-1
-LINE_SELECTOR=peco --select-1
-```
-
-設定が終わったら、保存してエディタを閉じよう.
-
-### はじめての記事作成
-それでは新しい記事を作成してみよう.  
-まずは下のコマンドを実行してみてね.  
-
-```
-$ hblg new              # 記事の新規作成(hblg nでも同じ)
-```
-
-すると勝手にエディタが開いて新しい記事の編集状態になると思う. 
-(テンプレートが複数ある場合は、テンプレート選択画面が出るよ)
-
-デフォルトの記事のテンプレートフォーマットは下みたいな感じ.  
-
-```
-
-
-yes
-(exp cate1,cate2...)
-#Title
-
-[:contents]
-```
-
-空行の1〜2行目と、3行目は投稿に必要な情報が入る場所.  
-新規作成時はそのままにしておいてね.  
-4行目は記事のカテゴリをカンマ区切りで入力しよう.  
-5行目が記事のタイトル、6行目以降は記事本文になるよ.  
-本文はMarkdown形式で記載してね.  
-
-サンプル記事は下みたいな感じ.
-
-```
-
-
-yes
-カテゴリだよ,diary
-#これはタイトルだよ
-これ以降は本文だよ.
-
-はてなブログを操作するシェルスクリプトを書いたよ.
-
-詳細は[こちら](https://github.com/hacolab/hateblog-sh)を見てね.
-
-
-```
-
-記事を編集し終わったら、保存してエディタを閉じよう.  
-
-すると下のような確認が出てくるので、`y`か`n`で答えてね.  
-ちなみに投稿しなかった未投稿記事は、`hblg draft edit (またはhblg de)`で編集できるよ.
-
-```
-Upload now?(y/n)> y     # y: 今すく投稿        n: 投稿しない
-Draft?(y/n)> y          # y: 下書きとして投稿  n: 公開記事として投稿
-```
-
-投稿後は、投稿した記事とはてなブログのサーバに実際に保存された記事の差分が出るので確認しておこう.  
-差分が出るとしたら、気にしなくていい最初の2行とタイトルの先頭末尾の空白削除くらいじゃないかな.  
-(それ以外はバグの可能性が高いかも)
-
-下のようにローカルのファイルをサーバから取得したファイルで上書くか確認される.
-`y`か`n`で答えてね.  
-
-```
-Update local file(by response contents)?(y/n)> y
-# y: サーバへ保存したファイルでローカルファイルを上書き
-# n: ローカルファイルの状態はそのまま保持(差分確認で不都合があったとき用. hblg editで再編集してね)
-```
-
-以上で、記事の新規作成から投稿までは終わりだよ.
-
-### 投稿済み記事の編集
-つぎに、投稿済みの記事を編集してみよう.  
-下のコマンドを打つと記事一覧が表示されるので、好きな記事を選ぼう.  
-
-```
-$ hblg edit             # 投稿済み記事の編集
-```
-
-記事を選ぶと選んだ記事のファイルが勝手に開くよ.
-
-あとは基本的には新しい記事の作成と同じだけど、エディタを閉じた後に、
-投稿済みの記事と投稿しようとしている記事の差分が表示されるよ.  
-(差分がない場合は、変更されてない旨のメッセージが出るだけ)
-
-差分に問題がなければ、(差分ビューワを閉じて)下の確認に答えてね.
-
-```
-Upload now?(y/n)> y     # y: 今すく投稿        n: 投稿しない
-Draft?(y/n)> y          # y: 下書きとして投稿  n: 公開記事として投稿
-```
-
-ちなみに一度公開した記事は、下書きには戻せないんだ.  
-スクリプトが悪いのか、はてなブログのAPIの仕様なのかは知らないけど、  
-ひとまず今は、下書きに戻したい時はブラウザから操作しないといけない.
-ごめんよ.
-
-さて、以上でチュートリアルは終わりだよ.
-
-おつかれさま.
-
-他のコマンドについては[Usage](#Usage)を見てね.
+基本的な使い方は[こちら](TUTORIAL.md)を見てね.
 
 
 ## Usage
@@ -282,11 +81,29 @@ Draft?(y/n)> y          # y: 下書きとして投稿  n: 公開記事として�
 とりあえず使ってみたい人は、[チュートリアル](#getting-started-guide)を参考にしてね.  
 
 ```
+[USAGE]
+  hblg [-hV]
+  hblg config [common|new|edit|delete]
+  hblg [-b BlogID] entry [fetch|edit|delete]
+  hblg [-b BlogID] entry new [<TempaleteName>]
+  hblg [-b BlogID] draft [edit|delete]
+  hblg [-b BlogID] template [new|edit|delete]
+  hblg [-b BlogID] list (local|remote) [<Item> ...]
+  hblg [-b BlogID] request get <Path> [-l <Count>[:<Pattern>]]
+  hblg [-b BlogID] request delete <EntryID>
+  hblg [-b BlogID] request post <TxFile>
+  hblg [-b BlogID] request put <TxFile> [<EntryID>]
+
+[OPTIONS]
+  -h                      print script help
+  -V                      print script version
+  -b BlogID               target blog's id
 
 ```
 
 ### 設定コマンド
 ブログや使用するツールの設定を行うコマンド.
+`()`内は簡略系.
 
 ```
 $ hblg config new       # ブログ設定ファイルの作成 (hblg cn)
@@ -332,14 +149,14 @@ $ hblg draft edit               # 未投稿記事の編集   (hblg de)
 $ hblg draft delete             # 未投稿記事の削除   (hblg dd)
 ```
 
-基本的に最初に一度fetchして記事リストを更新しておけばいいと思うよ.  
+基本的には最初に一度fetchして記事リストを更新しておけばいいと思うよ.  
 (あとは記事を選んだときに勝手に取得するよ)
 
 #### 記事ファイルフォーマット
 取得した投稿済みの記事はローカルにMarkdownファイルとして保存するよ.
 
 ファイルの1〜4行目は記事を投稿する際に必要なヘッダ情報だよ.  
-5行目以降が記事のタイトルと内容になるよ.  
+5行目以降が記事のタイトルと本文になるよ.  
 
 |行番号   |説明
 |:--------|:-------------------------------------------------
@@ -418,12 +235,12 @@ $ hblg list category title draft
 |alternate  |link rel=alternate |  -  |  x   |記事公開URL
 |edit       |link rel=edit      |  x  |  x   |記事編集URL
 |entry_id   |link rel=edit      |  x  |  x   |エントリID(link rel=editから抜き出し)
-|title      |<== 同じ           |  x  |  x   |記事タイトル
-|updated    |<== 同じ           |  -  |  x   |記事を公開したときに表示する更新日時
-|published  |<== 同じ           |  x  |  x   |記事投稿日時
+|title      |<-- 同じ           |  x  |  x   |記事タイトル
+|updated    |<-- 同じ           |  -  |  x   |記事を公開したときに表示する更新日時
+|published  |<-- 同じ           |  x  |  x   |記事投稿日時
 |edited     |app:edited         |  x  |  x   |最後に記事を編集した日時
 |draft      |app:draft          |  x  |  x   |下書き状態(yes|no)
-|summary    |<== 同じ           |  -  |  x   |記事概要
+|summary    |<-- 同じ           |  -  |  x   |記事概要
 
 #### 任意のリクエスト送信
 はてなブログAtomPubへ好きなリクエストを送信できるよ.  
@@ -476,7 +293,7 @@ $ find dir/*.md | xargs -L 1 -t hblg request post
 ```
 
 
-## Direcotry/File Layout
+## Directory/File Layout
 このスクリプトで利用するディレクトリやファイル達はこちら.
 
 ### 設定ファイルとテンプレートファイル
@@ -552,13 +369,17 @@ ${XDG_DATA_DIR}が未定義の場合は、`${HOME}/.local/share/hateblog/`配下
 ### その他
 そのうちISSUEに書くか対応するかもかも.
 
-- `entry edit/delete`でローカルにファイルがあれば`fzf`でプレビューを見たい
-- `entry fetch`は記事が増えれば増えるほど遅くなる仕様.
+- `entry edit/delete`でローカルにファイルがあれば`fzf`で選択中にプレビューを見たい
+- `entry fetch`は記事が増えれば増えるほど遅くなる仕様
 - `entry fetch -f`は、記事コレクションから記事ファイルを生成したい(今は1記事ずつgetリクエストを送っている)
-- 一度公開した記事を下書きに戻すことができない(HTTP 400エラー). ブラウザからはできるのだからなんとかなるのかも.
+- 一度公開した記事を下書きに戻すことができない(HTTP 400エラー). ブラウザからはできるのだからなんとかなるのかも
+  - はてなサポートにきいても技術的なことは回答できないとのこと
+    - ついでにヘルプに載ってないことはできないよとのこと
+    - うん、ヘルプには載ってるよ. でも説明はないよ
 - シグナル処理未対応(Ctrl-Cとかで一時ファイルとか残っちゃうかも)
 - 終了ステータス未対応(今どうなっているか確認してないけどとりあえずヘルプどおりではないはず)
 - 複数の記事選択による操作って、需要あるのかしら
+- `sh`で作る規模じゃないよね
 
 
 ## Contribution
