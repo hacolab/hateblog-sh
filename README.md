@@ -8,7 +8,7 @@
 - [Installation](#installation)
 - [Getting-Started-Guide](#getting-started-guide)
 - [Usage](#usage)
-- [Directory/File-Layout](#direcotryfile-Layout)
+- [Directory/File-Layout](#direcotryfile-layout)
 - [Warning](#warning)
 - [Contribution](#contribution)
 - [Licence](#licence)
@@ -18,9 +18,9 @@
 ## Description
 下のような流れ作業を対話的にサクサクできるよ.
 
-- 記事の作成:　テンプレートの選択 --> 編集 --> 投稿
-- 記事の編集:　記事の選択 --> 編集 --> 差分確認 --> 投稿
-- 記事の削除:　記事の選択 --> 削除
+- 記事の作成:　テンプレートの選択　-->　編集　-->　投稿
+- 記事の編集:　記事の選択　-->　編集　-->　差分確認　-->　投稿
+- 記事の削除:　記事の選択　-->　削除
 
 おまけに、非対話的に下のようなこともできちゃうよ.
 
