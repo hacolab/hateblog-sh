@@ -8,7 +8,7 @@
 - [Installation](#installation)
 - [Getting-Started-Guide](#getting-started-guide)
 - [Usage](#usage)
-- [Directory/File-Layout](#direcotryfile-layout)
+- [Directory/File-Layout](#directoryfile-layout)
 - [Warning](#warning)
 - [Contribution](#contribution)
 - [Licence](#licence)
