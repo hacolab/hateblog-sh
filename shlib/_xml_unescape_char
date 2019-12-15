@@ -3,10 +3,10 @@
 #+  $0
 
 # main code
-sed 's/&amp;/\&/g'      \
-| sed 's/&quot;/"/g'    \
-| sed "s/&#39;/'/g"     \
-| sed 's/&lt;/</g'      \
-| sed 's/&gt;/>/g'      \
-| sed 's/[ ]*$//g'
+sed 's/&quot;/"/g'    \
+| sed "s/&#39;/'/g"   \
+| sed 's/&lt;/</g'    \
+| sed 's/&gt;/>/g'    \
+| sed 's/&amp;/\&/g'  \
+| sed 's/[ ]*$//'
 
