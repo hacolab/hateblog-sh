@@ -3,12 +3,13 @@
 
 そんなきみがちょっとだけ幸せになれるかもしれないシェルスクリプトだよ. (bashじゃなくてsh)
 
+
 - [Description](#description)
 - [Requirement](#requirement)
 - [Installation](#installation)
-- [Getting-Started-Guide](#getting-started-guide)
+- [Getting Started Guide](#getting-started-guide)
 - [Usage](#usage)
-- [Directory/File-Layout](#directoryfile-layout)
+- [Directory/File Layout](#directoryfile-layout)
 - [Warning](#warning)
 - [Contribution](#contribution)
 - [Licence](#licence)
