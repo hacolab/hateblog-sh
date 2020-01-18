@@ -11,7 +11,7 @@
 #+  $0 [-b BlogID] entry new [<TempaleteName>]
 #+  $0 [-b BlogID] draft [edit|delete]
 #+  $0 [-b BlogID] template [new|edit|delete]
-#+  $0 [-b BlogID] list (local|remote) [<Item> ...]
+#+  $0 [-b BlogID] list (local|server) [<Item> ...]
 #+  $0 [-b BlogID] request get <Path> [-l <Count>[:<Pattern>]]
 #+  $0 [-b BlogID] request delete <EntryID>
 #+  $0 [-b BlogID] request post <TxFile>
@@ -156,8 +156,8 @@ case "$SUB_CMD" in
   request ) shift;;
   rq ) SUB_CMD=request; shift;;
 
-  # Ingore
-  "" ) usage_exit "$0" ;;
+  # Ignore
+  * ) usage_exit "$0" ;;
 esac
 
 ###################################################
